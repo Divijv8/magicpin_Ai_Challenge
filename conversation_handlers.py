@@ -26,15 +26,23 @@ AUTO_REPLY_PATTERNS = [
 
 # Explicit commitment / action transition phrases
 INTENT_ACTION_PATTERNS = [
-    r"\b(yes|yeah|yup|yep|sure|ok|okay|done|go ahead|proceed|lets do it|let's do it|send|send it|publish|update|start)\b",
-    r"\b(send me|please update|kar do|kar dijiye|chalo|bilkul|theek hai|thik hai|haan|hanji)\b",
-    r"\b(mujhe .* judrna hai|want to join|sign me up)\b"
+    r"\b(yes|yeah|yup|yep|sure|ok|okay|done|go ahead|go for it|proceed|lets do it|let's do it|send|send it|publish|update|start)\b",
+    r"\b(send me|please update|kar do|kar dijiye|chalo|bilkul|theek hai|thik hai|haan|hanji|han)\b",
+    r"\b(mujhe .* judrna hai|want to join|sign me up)\b",
+    r"\b(keep (it )?going|continue|keep (it )?running|don'?t stop|do not stop|not want to stop|never stop|chalu rakho|chalne do)\b"
 ]
 
 # Hostile / opt-out / unsubscribe phrases
 HOSTILE_STOP_PATTERNS = [
     r"\b(stop|unsubscribe|spam|abuse|don't message|dont message|leave me alone|not interested|remove me|block|useless)\b",
     r"\b(mat bhejo|band karo|pareshan mat karo)\b"
+]
+
+# Negated stop / opt-out phrases (e.g., "do not stop", "don't stop the campaign", "mat roko")
+NEGATED_STOP_PATTERNS = [
+    r"\b(do\s*n'?t|do\s+not|never|did\s*n'?t|did\s+not|not)\s+(want\s+to\s+)?(stop|pause|cancel|end|halt|close)\b",
+    r"\b(not\s+to\s+stop|without\s+stopping)\b",
+    r"\b(mat\s+roko|band\s+mat\s+karo|roko\s+mat|chalne\s+do|chalu\s+rakho)\b"
 ]
 
 # Deferral / busy phrases
@@ -50,6 +58,21 @@ class ConversationManager:
         # Map conversation_id -> list of turn dicts
         self.conversations: Dict[str, List[Dict[str, Any]]] = {}
 
+    @staticmethod
+    def get_normalized_candidates(text: str) -> List[str]:
+        """
+        Produce normalized candidate variations of input text:
+        1. Cleaned lowercase stripped text.
+        2. Text with 3+ identical alphabetical repeats collapsed to 1 char (e.g. 'yessssss' -> 'yes', 'go forrrrr it' -> 'go for it', 'okkkk' -> 'ok').
+        3. Text with 3+ identical alphabetical repeats collapsed to 2 chars (e.g. 'proceeeeed' -> 'proceed', 'haaaan' -> 'haan').
+        """
+        if not text:
+            return [""]
+        base = text.lower().strip()
+        c1 = re.sub(r'([a-zA-Z])\1{2,}', r'\1', base)
+        c2 = re.sub(r'([a-zA-Z])\1{2,}', r'\1\1', base)
+        return list(dict.fromkeys([base, c1, c2]))
+
     def record_turn(self, conv_id: str, role: str, message: str) -> None:
         """Record turn history."""
         if conv_id not in self.conversations:
@@ -62,12 +85,13 @@ class ConversationManager:
 
     def is_auto_reply(self, message: str, history: List[Dict[str, Any]]) -> bool:
         """Check if message matches automated WhatsApp greetings or repeats identically."""
-        msg_lower = message.lower().strip()
+        candidates = self.get_normalized_candidates(message)
 
         # 1. Check against known auto-reply regexes
-        for pat in AUTO_REPLY_PATTERNS:
-            if re.search(pat, msg_lower):
-                return True
+        for cand in candidates:
+            for pat in AUTO_REPLY_PATTERNS:
+                if re.search(pat, cand):
+                    return True
 
         # 2. Check consecutive identical merchant messages
         merchant_msgs = [t["message"].lower().strip() for t in history if t.get("role") in ("merchant", "customer")]
@@ -77,27 +101,38 @@ class ConversationManager:
         return False
 
     def is_hostile_or_stop(self, message: str) -> bool:
-        """Check for opt-out, stop, or hostile messages."""
-        msg_lower = message.lower().strip()
-        for pat in HOSTILE_STOP_PATTERNS:
-            if re.search(pat, msg_lower):
-                return True
+        """Check for opt-out, stop, or hostile messages, guarding against negation."""
+        candidates = self.get_normalized_candidates(message)
+
+        # 1. Negation guard: "do not want to stop", "don't stop", "mat roko", etc.
+        for cand in candidates:
+            for neg_pat in NEGATED_STOP_PATTERNS:
+                if re.search(neg_pat, cand):
+                    return False
+
+        # 2. Hostile / Stop patterns
+        for cand in candidates:
+            for pat in HOSTILE_STOP_PATTERNS:
+                if re.search(pat, cand):
+                    return True
         return False
 
     def is_busy_or_deferral(self, message: str) -> bool:
         """Check if user asks to defer / is busy."""
-        msg_lower = message.lower().strip()
-        for pat in BUSY_DEFER_PATTERNS:
-            if re.search(pat, msg_lower):
-                return True
+        candidates = self.get_normalized_candidates(message)
+        for cand in candidates:
+            for pat in BUSY_DEFER_PATTERNS:
+                if re.search(pat, cand):
+                    return True
         return False
 
     def is_intent_commitment(self, message: str) -> bool:
         """Check if user expresses explicit intent or agreement."""
-        msg_lower = message.lower().strip()
-        for pat in INTENT_ACTION_PATTERNS:
-            if re.search(pat, msg_lower):
-                return True
+        candidates = self.get_normalized_candidates(message)
+        for cand in candidates:
+            for pat in INTENT_ACTION_PATTERNS:
+                if re.search(pat, cand):
+                    return True
         return False
 
     def handle_reply(
@@ -135,7 +170,13 @@ class ConversationManager:
                     prev_msg = t.get("message", "").lower()
                     break
 
-            if "thali" in prev_msg or "lunch" in prev_msg or "corporate" in prev_msg:
+            candidates = self.get_normalized_candidates(message)
+            c1_msg = candidates[1] if len(candidates) > 1 else candidates[0]
+
+            if any(k in c1_msg for k in ("not want to stop", "don't stop", "dont stop", "do not stop", "keep running", "keep going", "continue", "chalne do", "chalu rakho", "mat roko")):
+                body = f"Understood! Keeping the campaign active for {merchant_name}. Everything is running smoothly and I'll continue tracking your results."
+                rationale = "Merchant explicitly affirmed to keep campaign active; acknowledged and maintaining continuous execution."
+            elif "thali" in prev_msg or "lunch" in prev_msg or "corporate" in prev_msg:
                 body = f"Done! Sending over the corporate thali pricing sheet and packaging guidelines for {merchant_name} now. I'll check in tomorrow on your first batch!"
                 rationale = "Honoring merchant confirmation on corporate thali; immediately fulfilling material delivery."
             elif "yoga" in prev_msg or "gym" in prev_msg or "batch" in prev_msg:
