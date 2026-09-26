@@ -105,7 +105,7 @@ class GeminiClient:
             method="POST"
         )
 
-        resp = urlrequest.urlopen(req, timeout=25)
+        resp = urlrequest.urlopen(req, timeout=10)
         raw_resp = resp.read().decode("utf-8")
         data = json.loads(raw_resp)
 

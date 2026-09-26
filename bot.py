@@ -299,6 +299,10 @@ async def tick(body: TickRequest):
     actions: List[TickAction] = []
 
     for trg_id in body.available_triggers:
+        # Enforce technical constraint: max 20 actions per tick
+        if len(actions) >= 20:
+            break
+
         trg_payload = get_context("trigger", trg_id)
         if not trg_payload:
             continue
