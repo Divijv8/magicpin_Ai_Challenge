@@ -42,10 +42,10 @@ class GeminiClient:
         self.api_key = api_key or os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY", "")
         self.preferred_models = [
             model,
+            "gemini-3.8-flash",
             "gemini-2.5-flash",
-            "gemini-2.0-flash",
-            "gemini-1.5-flash",
-            "gemini-1.5-pro",
+            "gemini-2.5-flash-lite",
+            "gemini-flash-latest",
         ]
         # Remove duplicates while preserving order
         seen = set()

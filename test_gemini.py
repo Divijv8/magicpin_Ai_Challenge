@@ -49,9 +49,9 @@ masked_key = api_key[:6] + "..." + api_key[-4:] if len(api_key) > 10 else "***"
 print(f"🔑 API Key detected: {masked_key} (length: {len(api_key)})")
 
 MODELS_TO_TEST = [
+    "gemini-3.8-flash",
     "gemini-2.5-flash",
-    "gemini-2.0-flash",
-    "gemini-1.5-flash",
+    "gemini-2.5-flash-lite",
 ]
 
 success = False
@@ -64,12 +64,12 @@ for model in MODELS_TO_TEST:
         "contents": [
             {
                 "role": "user",
-                "parts": [{"text": "You are Vera, magicpin merchant assistant. Say hello to Dr. Meera in exactly 1 crisp sentence."}]
+                "parts": [{"text": "Say hello in 3 words"}]
             }
         ],
         "generationConfig": {
             "temperature": 0.0,
-            "maxOutputTokens": 100
+            "maxOutputTokens": 20
         }
     }
     
