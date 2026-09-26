@@ -49,9 +49,10 @@ masked_key = api_key[:6] + "..." + api_key[-4:] if len(api_key) > 10 else "***"
 print(f"🔑 API Key detected: {masked_key} (length: {len(api_key)})")
 
 MODELS_TO_TEST = [
-    "gemini-3.8-flash",
+    "gemini-3.5-flash",
+    "gemini-3.5-flash-lite",
     "gemini-2.5-flash",
-    "gemini-2.5-flash-lite",
+    "gemini-3.8-flash",
 ]
 
 success = False
@@ -81,7 +82,7 @@ for model in MODELS_TO_TEST:
             headers={"Content-Type": "application/json"},
             method="POST"
         )
-        with urlrequest.urlopen(req, timeout=15) as resp:
+        with urlrequest.urlopen(req, timeout=30) as resp:
             elapsed = time.time() - start_t
             raw = resp.read().decode("utf-8")
             data = json.loads(raw)

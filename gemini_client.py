@@ -38,13 +38,14 @@ if os.path.exists(env_file):
 class GeminiClient:
     """Robust client for interacting with Gemini API."""
 
-    def __init__(self, api_key: Optional[str] = None, model: str = "gemini-2.5-flash"):
+    def __init__(self, api_key: Optional[str] = None, model: str = "gemini-3.5-flash"):
         self.api_key = api_key or os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY", "")
         self.preferred_models = [
             model,
-            "gemini-3.8-flash",
+            "gemini-3.5-flash",
+            "gemini-3.5-flash-lite",
             "gemini-2.5-flash",
-            "gemini-2.5-flash-lite",
+            "gemini-3.8-flash",
             "gemini-flash-latest",
         ]
         # Remove duplicates while preserving order
