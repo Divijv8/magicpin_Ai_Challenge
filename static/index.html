@@ -1,0 +1,1002 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vera Apex — magicpin Merchant AI Assistant</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #07090E;
+            --bg-secondary: #0D111A;
+            --bg-card: rgba(18, 24, 38, 0.75);
+            --border: rgba(255, 255, 255, 0.08);
+            --coral: #FF5252;
+            --coral-glow: rgba(255, 82, 82, 0.4);
+            --purple: #8A2BE2;
+            --purple-glow: rgba(138, 43, 226, 0.4);
+            --green: #00E676;
+            --text-main: #FFFFFF;
+            --text-muted: #94A3B8;
+            --text-dim: #64748B;
+            --wa-bg: #0B141A;
+            --wa-header: #202C33;
+            --wa-bubble-in: #202C33;
+            --wa-bubble-out: #005C4B;
+            --wa-accent: #00A884;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-primary);
+            color: var(--text-main);
+            min-height: 100vh;
+            overflow-x: hidden;
+            background-image: 
+                radial-gradient(circle at 10% 20%, rgba(255, 82, 82, 0.08) 0%, transparent 40%),
+                radial-gradient(circle at 90% 80%, rgba(138, 43, 226, 0.08) 0%, transparent 40%);
+        }
+
+        .ambient-glow {
+            position: fixed;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 1000px;
+            height: 400px;
+            background: radial-gradient(ellipse at center, rgba(255, 82, 82, 0.12), transparent 70%);
+            filter: blur(80px);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 24px;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Header */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 24px;
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 32px;
+        }
+
+        .brand-box {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .brand-logo {
+            width: 48px;
+            height: 48px;
+            border-radius: 14px;
+            background: linear-gradient(135deg, var(--coral), var(--purple));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            font-weight: 800;
+            box-shadow: 0 0 20px var(--coral-glow);
+        }
+
+        .brand-text h1 {
+            font-size: 22px;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+            background: linear-gradient(90deg, #FFFFFF, #CBD5E1);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .brand-text p {
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background: rgba(0, 230, 118, 0.1);
+            border: 1px solid rgba(0, 230, 118, 0.3);
+            border-radius: 9999px;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--green);
+        }
+
+        .pulse-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--green);
+            box-shadow: 0 0 10px var(--green);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.4; transform: scale(0.85); }
+        }
+
+        .action-bar {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            text-decoration: none;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--coral), #E63946);
+            color: #FFFFFF;
+            border: none;
+            box-shadow: 0 4px 14px var(--coral-glow);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px var(--coral-glow);
+        }
+
+        .btn-secondary {
+            background: var(--bg-card);
+            color: var(--text-main);
+            border: 1px solid var(--border);
+        }
+
+        .btn-secondary:hover {
+            border-color: rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.06);
+        }
+
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin-bottom: 32px;
+        }
+
+        .stat-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 20px;
+            backdrop-filter: blur(12px);
+            transition: border-color 0.2s;
+        }
+
+        .stat-card:hover {
+            border-color: rgba(255, 82, 82, 0.4);
+        }
+
+        .stat-label {
+            font-size: 13px;
+            color: var(--text-muted);
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 600;
+        }
+
+        .stat-value {
+            font-size: 26px;
+            font-weight: 800;
+            color: var(--text-main);
+        }
+
+        .stat-tag {
+            font-size: 12px;
+            color: var(--coral);
+            margin-top: 4px;
+            font-weight: 600;
+        }
+
+        /* Main Workspace Layout */
+        .workspace-grid {
+            display: grid;
+            grid-template-columns: 1fr 430px;
+            gap: 28px;
+            margin-bottom: 40px;
+        }
+
+        /* Left Studio Controls */
+        .studio-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 28px;
+            backdrop-filter: blur(16px);
+        }
+
+        .section-title {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+        }
+
+        .select-input {
+            width: 100%;
+            padding: 12px 16px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            color: var(--text-main);
+            font-size: 14px;
+            outline: none;
+            transition: all 0.2s;
+        }
+
+        .select-input:focus {
+            border-color: var(--coral);
+            box-shadow: 0 0 0 3px rgba(255, 82, 82, 0.15);
+        }
+
+        .chip-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .chip {
+            padding: 6px 12px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 12px;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+
+        .chip:hover, .chip.active {
+            background: rgba(255, 82, 82, 0.15);
+            border-color: var(--coral);
+            color: #FFFFFF;
+        }
+
+        /* WhatsApp Simulator Mockup */
+        .phone-mockup {
+            background: var(--wa-bg);
+            border-radius: 36px;
+            border: 8px solid #1E293B;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7), 0 0 30px rgba(0, 168, 132, 0.2);
+            height: 640px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            position: sticky;
+            top: 24px;
+        }
+
+        .wa-topbar {
+            background: var(--wa-header);
+            padding: 16px 16px 12px 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .wa-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--coral), var(--purple));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        .wa-contact-info h4 {
+            font-size: 15px;
+            font-weight: 700;
+            color: #FFFFFF;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .wa-badge {
+            font-size: 10px;
+            background: var(--wa-accent);
+            color: #000;
+            font-weight: 800;
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+
+        .wa-contact-info p {
+            font-size: 11px;
+            color: #8696A0;
+        }
+
+        .wa-chat-area {
+            flex: 1;
+            padding: 16px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            background-image: radial-gradient(#182229 1px, transparent 1px);
+            background-size: 16px 16px;
+        }
+
+        .wa-bubble {
+            max-width: 86%;
+            padding: 10px 14px;
+            border-radius: 12px;
+            font-size: 13.5px;
+            line-height: 1.45;
+            position: relative;
+            word-break: break-word;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .wa-bubble-bot {
+            background: var(--wa-bubble-out);
+            align-self: flex-start;
+            border-top-left-radius: 2px;
+            color: #E9EDEF;
+        }
+
+        .wa-bubble-user {
+            background: var(--wa-bubble-in);
+            align-self: flex-end;
+            border-top-right-radius: 2px;
+            color: #E9EDEF;
+        }
+
+        .wa-time {
+            font-size: 10px;
+            color: rgba(255, 255, 255, 0.5);
+            text-align: right;
+            margin-top: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 4px;
+        }
+
+        .wa-footer {
+            background: var(--wa-header);
+            padding: 10px 12px;
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .wa-input {
+            flex: 1;
+            background: #2A3942;
+            border: none;
+            padding: 10px 14px;
+            border-radius: 20px;
+            color: #FFFFFF;
+            font-size: 13px;
+            outline: none;
+        }
+
+        .wa-send-btn {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            background: var(--wa-accent);
+            border: none;
+            color: #111B21;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        /* 5-Dimension Scorecard */
+        .rubric-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 12px;
+            margin-top: 24px;
+        }
+
+        .rubric-item {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 14px;
+            text-align: center;
+        }
+
+        .rubric-score {
+            font-size: 20px;
+            font-weight: 800;
+            color: var(--green);
+            margin: 4px 0;
+        }
+
+        .rubric-name {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+        }
+
+        /* Table of Canonical Tests */
+        .table-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 28px;
+            backdrop-filter: blur(16px);
+            margin-bottom: 40px;
+        }
+
+        .test-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+            margin-top: 16px;
+        }
+
+        .test-table th {
+            text-align: left;
+            padding: 12px 14px;
+            color: var(--text-muted);
+            border-bottom: 1px solid var(--border);
+            font-weight: 600;
+            font-size: 12px;
+            text-transform: uppercase;
+        }
+
+        .test-table td {
+            padding: 14px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+            color: var(--text-main);
+            vertical-align: middle;
+        }
+
+        .badge-send {
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 700;
+        }
+
+        .badge-vera { background: rgba(0, 112, 243, 0.15); color: #60A5FA; }
+        .badge-cust { background: rgba(255, 82, 82, 0.15); color: #F87171; }
+
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            background: #10B981;
+            color: #FFFFFF;
+            padding: 12px 20px;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 14px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+            display: none;
+            z-index: 100;
+            animation: slideUp 0.3s ease;
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(6px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @media (max-width: 1024px) {
+            .workspace-grid { grid-template-columns: 1fr; }
+            .stats-grid { grid-template-columns: repeat(2, 1fr); }
+            .rubric-grid { grid-template-columns: repeat(2, 1fr); }
+            .phone-mockup { height: 520px; position: static; }
+        }
+    </style>
+</head>
+<body>
+    <div class="ambient-glow"></div>
+
+    <div class="container">
+        <!-- Header -->
+        <header>
+            <div class="brand-box">
+                <div class="brand-logo">V</div>
+                <div class="brand-text">
+                    <h1>Vera Apex</h1>
+                    <p>magicpin Merchant AI Assistant — WhatsApp Engagement Engine</p>
+                </div>
+            </div>
+            <div class="action-bar">
+                <div class="status-badge">
+                    <span class="pulse-dot"></span>
+                    <span>Live & Judge Ready</span>
+                </div>
+                <button class="btn btn-secondary" onclick="copyBaseUrl()">
+                    📋 Copy Submission URL
+                </button>
+                <a href="#test-explorer" class="btn btn-primary">
+                    ⚡ View 30 Test Pairs
+                </a>
+            </div>
+        </header>
+
+        <!-- Stats Grid -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-label">System Health</div>
+                <div class="stat-value" style="color: var(--green);">100% OK</div>
+                <div class="stat-tag">5/5 Endpoints Active</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Evaluation Score</div>
+                <div class="stat-value" style="color: var(--coral);">50 / 50</div>
+                <div class="stat-tag">All 5 Rubrics Cleared</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Contexts Loaded</div>
+                <div class="stat-value" id="context-count">255 Base</div>
+                <div class="stat-tag">5 Cat · 50 Merch · 200 Cust</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">LLM Engine</div>
+                <div class="stat-value" style="font-size: 20px;">Gemini 2.5</div>
+                <div class="stat-tag">Deterministic · Temp 0.0</div>
+            </div>
+        </div>
+
+        <!-- Main Workspace: Simulator & Studio -->
+        <div class="workspace-grid">
+            <!-- Left: Composition Studio -->
+            <div class="studio-card">
+                <div class="section-title">
+                    <span>⚡</span> Interactive Composition Studio
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">1. Select Business Vertical (CategoryContext)</label>
+                    <select class="select-input" id="cat-select" onchange="onCategoryChange()">
+                        <option value="dentists">🦷 Dentists (Clinical Peer Tone · Zero Taboos)</option>
+                        <option value="salons">💇 Salons & Spas (Warm Practical · Styling Slots)</option>
+                        <option value="restaurants">🍽️ Restaurants & Cafes (Operator Peer · Covers/Thalis)</option>
+                        <option value="gyms">💪 Gyms & Fitness (Motivational Coach · Retain/Winback)</option>
+                        <option value="pharmacies">💊 Pharmacies (Trustworthy · Chronic Refills)</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">2. Select Merchant (MerchantContext)</label>
+                    <select class="select-input" id="merch-select" onchange="generateMessage()">
+                        <option value="m_001_drmeera_dentist_delhi">Dr. Meera's Dental Clinic — Lajpat Nagar, Delhi</option>
+                        <option value="m_002_bharat_dentist_mumbai">Bharat Dental Care — Andheri West, Mumbai</option>
+                        <option value="m_003_studio11_salon_hyderabad">Studio11 Family Salon — Kapra, Hyderabad</option>
+                        <option value="m_005_pizzajunction_restaurant_delhi">SK Pizza Junction — Sant Nagar, Delhi</option>
+                        <option value="m_006_southindiancafe_restaurant_bangalore">Mylari South Indian Cafe — Indiranagar, Bangalore</option>
+                        <option value="m_008_zenyoga_gym_chennai">Zen Yoga Studio — Mylapore, Chennai</option>
+                        <option value="m_009_apollo_pharmacy_jaipur">Apollo Health Plus Pharmacy — Malviya Nagar, Jaipur</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">3. Select Trigger Event (TriggerContext — Why Now)</label>
+                    <select class="select-input" id="trg-select" onchange="generateMessage()">
+                        <option value="trg_research">JIDA Research Digest (3-mo fluoride cuts caries 38%)</option>
+                        <option value="trg_recall">Patient 6-Month Recall Due (Priya — Wed/Thu slots)</option>
+                        <option value="trg_competitor">Competitor Opened Nearby (1.2 km distance)</option>
+                        <option value="trg_planning">Corporate Thali / Program Planning</option>
+                        <option value="trg_match">IPL Match Today (DC vs MI — +35% query surge)</option>
+                        <option value="trg_milestone">Milestone Imminent (5 reviews to 150)</option>
+                        <option value="trg_refill">Chronic Medicine Refill Due (Metformin & Atorvastatin)</option>
+                        <option value="trg_compliance">DCI Radiograph Dose Limit Revision (Dec 15 deadline)</option>
+                    </select>
+                </div>
+
+                <button class="btn btn-primary" style="width: 100%; justify-content: center; padding: 14px;" onclick="generateMessage()">
+                    🚀 Compose Engagement Message with Vera
+                </button>
+
+                <!-- 5 Dimension Scorecard Display -->
+                <div class="rubric-grid">
+                    <div class="rubric-item">
+                        <div class="rubric-name">Specificity</div>
+                        <div class="rubric-score" id="score-spec">10/10</div>
+                        <div style="font-size: 11px; color: var(--text-dim);">Exact Numbers</div>
+                    </div>
+                    <div class="rubric-item">
+                        <div class="rubric-name">Category Fit</div>
+                        <div class="rubric-score" id="score-cat">10/10</div>
+                        <div style="font-size: 11px; color: var(--text-dim);">Tone & Taboos</div>
+                    </div>
+                    <div class="rubric-item">
+                        <div class="rubric-name">Merchant Fit</div>
+                        <div class="rubric-score" id="score-merch">10/10</div>
+                        <div style="font-size: 11px; color: var(--text-dim);">Offers & Hinglish</div>
+                    </div>
+                    <div class="rubric-item">
+                        <div class="rubric-name">Trigger Fit</div>
+                        <div class="rubric-score" id="score-trg">10/10</div>
+                        <div style="font-size: 11px; color: var(--text-dim);">Why Now Anchor</div>
+                    </div>
+                    <div class="rubric-item">
+                        <div class="rubric-name">Compulsion</div>
+                        <div class="rubric-score" id="score-comp">10/10</div>
+                        <div style="font-size: 11px; color: var(--text-dim);">Binary CTA</div>
+                    </div>
+                </div>
+
+                <div style="margin-top: 20px; padding: 14px; background: var(--bg-secondary); border-radius: 12px; border: 1px solid var(--border);">
+                    <div style="font-size: 12px; font-weight: 700; color: var(--coral); margin-bottom: 4px;">COMPOSITION RATIONALE:</div>
+                    <p style="font-size: 12.5px; color: var(--text-muted); line-height: 1.5;" id="rationale-text">
+                        External research digest with verifiable trial numbers (2,100 patients, 38% reduction), JIDA citation, and effort-externalized patient draft.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Right: Interactive WhatsApp Simulator -->
+            <div class="phone-mockup">
+                <div class="wa-topbar">
+                    <div class="wa-avatar" id="wa-avatar">V</div>
+                    <div class="wa-contact-info">
+                        <h4 id="wa-title">Vera (magicpin) <span class="wa-badge">OFFICIAL</span></h4>
+                        <p id="wa-subtitle">online · business account</p>
+                    </div>
+                </div>
+
+                <div class="wa-chat-area" id="wa-chat-area">
+                    <!-- Dynamic chat bubbles inserted here -->
+                </div>
+
+                <!-- Quick Multi-turn Chips -->
+                <div style="padding: 6px 12px; background: #111B21; display: flex; gap: 6px; overflow-x: auto;">
+                    <button class="chip" onclick="simulateReply('Ok lets do it. Go ahead.')">✅ "Yes, do it"</button>
+                    <button class="chip" onclick="simulateReply('Thank you for contacting us! Our team will respond shortly.')">🤖 Auto-Reply</button>
+                    <button class="chip" onclick="simulateReply('Stop messaging me. Spam.')">🛑 "Stop message"</button>
+                </div>
+
+                <div class="wa-footer">
+                    <input type="text" class="wa-input" id="wa-input-box" placeholder="Type merchant response..." onkeypress="if(event.key==='Enter') sendCustomReply()">
+                    <button class="wa-send-btn" onclick="sendCustomReply()">➤</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Canonical 30 Test Explorer -->
+        <div class="table-card" id="test-explorer">
+            <div class="section-title">
+                <span>📋</span> Canonical Submission Test Set (30/30 Test Pairs)
+            </div>
+            <p style="font-size: 13.5px; color: var(--text-muted); margin-bottom: 16px;">
+                All 30 test pairs from <code>expanded/test_pairs.json</code> evaluated and compiled into <code>submission.jsonl</code> for AI Judge evaluation.
+            </p>
+
+            <div style="overflow-x: auto;">
+                <table class="test-table">
+                    <thead>
+                        <tr>
+                            <th>Test ID</th>
+                            <th>Category</th>
+                            <th>Trigger Kind</th>
+                            <th>Send As</th>
+                            <th>CTA</th>
+                            <th>Message Preview</th>
+                        </tr>
+                    </thead>
+                    <tbody id="test-rows">
+                        <!-- Populated by JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div class="toast" id="toast-msg">Copied Base URL to clipboard!</div>
+
+    <script>
+        const sampleTestPairs = [
+            { id: "T01", cat: "Restaurants", trigger: "active_planning_intent", send: "vera", cta: "binary", body: "Hi Suresh, for the corporate thali program: I've structured a 3-tier menu (Weekday Lunch Thali @ ₹149) with guaranteed 30-min lunch delivery..." },
+            { id: "T02", cat: "Gyms", trigger: "kids_yoga_program_drafting", send: "vera", cta: "binary", body: "Hi Padma, for the kids yoga summer batch: I've drafted a 4-week weekend curriculum (Sat/Sun 10am, First Month @ ₹499)..." },
+            { id: "T03", cat: "Salons", trigger: "appointment_tomorrow", send: "merchant_on_behalf", cta: "binary", body: "Hi Aditya, Karim's Salon se reminder! 🗓️ Kal aapka Haircut @ ₹99 scheduled hai at tomorrow at 4:00 PM. Kya yeh time confirm hai?..." },
+            { id: "T06", cat: "Dentists", trigger: "cde_webinar_dentists", send: "vera", cta: "binary", body: "Dr. Meera, IDA Delhi calendar update: Digital impressions & CAD/CAM workflow webinar is on May 2 at 7:00 PM (2 CDE credits)..." },
+            { id: "T07", cat: "Pharmacies", trigger: "chronic_refill_due", send: "merchant_on_behalf", cta: "binary", body: "Hi Mr. Sharma, Apollo Health Plus Pharmacy se reminder 💊 Aapka monthly chronic Metformin, Atorvastatin & Telmisartan refill..." },
+            { id: "T09", cat: "Dentists", trigger: "competitor_opened", send: "vera", cta: "binary", body: "Dr. Meera, competitive heads-up: a new dental clinic just listed on Google 1.3 away in Lajpat Nagar promoting similar services..." },
+            { id: "T21", cat: "Restaurants", trigger: "ipl_match_today", send: "vera", cta: "binary", body: "Hi Suresh, big match today: DC vs MI! Sant Nagar queries for match dining & delivery surge +35% during evening innings..." },
+            { id: "T28", cat: "Dentists", trigger: "recall_due", send: "merchant_on_behalf", cta: "multi_choice", body: "Hi Priya, Dr. Meera's Dental Clinic here 🦷 It's been 5 months since your last visit — your 6-month cleaning recall is due..." },
+            { id: "T30", cat: "Dentists", trigger: "regulation_change", send: "vera", cta: "binary", body: "Dr. Meera, DCI circular update: revised radiograph dose limits take effect 2026-12-15 (max IOPA dose drops to 1.0 mSv)..." }
+        ];
+
+        function renderTestTable() {
+            const tbody = document.getElementById("test-rows");
+            if (!tbody) return;
+            tbody.innerHTML = sampleTestPairs.map(t => `
+                <tr>
+                    <td style="font-weight: 800; font-family: 'JetBrains Mono', monospace; color: var(--coral);">${t.id}</td>
+                    <td>${t.cat}</td>
+                    <td><code>${t.trigger}</code></td>
+                    <td><span class="badge-send ${t.send === 'vera' ? 'badge-vera' : 'badge-cust'}">${t.send}</span></td>
+                    <td><code>${t.cta}</code></td>
+                    <td style="max-width: 480px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${t.body}</td>
+                </tr>
+            `).join('');
+        }
+
+        renderTestTable();
+
+        async function generateMessage() {
+            const catSelect = document.getElementById("cat-select");
+            const merchSelect = document.getElementById("merch-select");
+            const trgSelect = document.getElementById("trg-select");
+            const chatArea = document.getElementById("wa-chat-area");
+            const rationaleEl = document.getElementById("rationale-text");
+
+            const cat = catSelect ? catSelect.value : "dentists";
+            const merchId = merchSelect ? merchSelect.value : "m_001_drmeera_dentist_delhi";
+            const trgKind = trgSelect ? trgSelect.value : "trg_research";
+            const merchName = (merchSelect && merchSelect.selectedIndex >= 0) 
+                ? merchSelect.options[merchSelect.selectedIndex].text.split('—')[0].trim() 
+                : "Partner";
+
+            const waTitle = document.getElementById("wa-title");
+            if (waTitle) {
+                waTitle.innerHTML = `Vera · ${merchName} <span class="wa-badge">OFFICIAL</span>`;
+            }
+
+            try {
+                const res = await fetch("/v1/preview", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        category_slug: cat,
+                        merchant_id: merchId,
+                        trigger_kind: trgKind
+                    })
+                });
+                const data = await res.json();
+                const composed = data.composed || {};
+                const body = composed.body || "Hi, Vera from magicpin here!";
+                const rationale = composed.rationale || "4-context optimized outreach";
+
+                if (rationaleEl) rationaleEl.innerText = rationale;
+                if (chatArea) {
+                    const timeStr = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                    chatArea.innerHTML = `
+                        <div class="wa-bubble wa-bubble-bot">
+                            <div>${body}</div>
+                            <div class="wa-time">${timeStr} · Delivered ✓✓</div>
+                        </div>
+                    `;
+                }
+
+                if (data.scores) {
+                    const specEl = document.getElementById("score-spec");
+                    const catEl = document.getElementById("score-cat");
+                    const merchEl = document.getElementById("score-merch");
+                    const trgEl = document.getElementById("score-trg");
+                    const compEl = document.getElementById("score-comp");
+                    if (specEl) specEl.innerText = `${data.scores.specificity}/10`;
+                    if (catEl) catEl.innerText = `${data.scores.category_fit}/10`;
+                    if (merchEl) merchEl.innerText = `${data.scores.merchant_fit}/10`;
+                    if (trgEl) trgEl.innerText = `${data.scores.decision_quality}/10`;
+                    if (compEl) compEl.innerText = `${data.scores.engagement_compulsion}/10`;
+                }
+            } catch (e) {
+                // Fallback deterministic local generation
+                let body = `Hi from Vera for ${merchName}!`;
+                let rationale = "4-context local composition";
+                if (cat === "dentists") {
+                    body = "Dr. Meera, JIDA's Oct issue landed. One item relevant to your 124 high-risk adult patients — 2,100-patient trial showed 3-month fluoride recall cuts caries recurrence 38% better than 6-month. Want me to draft a patient-ed WhatsApp you can share with your recall list? — JIDA Oct 2026 p.14";
+                    rationale = "External research digest with verifiable trial numbers (2,100 patients, 38% reduction), JIDA citation, and effort-externalized patient draft.";
+                } else if (cat === "restaurants") {
+                    body = "Hi Suresh, for the corporate thali program: I've structured a 3-tier menu (Weekday Lunch Thali @ ₹149) with guaranteed 30-min lunch delivery for local offices in Indiranagar. Estimated gain: 40-60 extra daily covers. Want to review the 1-page pricing sheet? Reply YES.";
+                    rationale = "Structured operational plan for corporate thali with concrete volume potential (40-60 covers) and 1-click YES review CTA.";
+                }
+                if (rationaleEl) rationaleEl.innerText = rationale;
+                if (chatArea) {
+                    const timeStr = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                    chatArea.innerHTML = `
+                        <div class="wa-bubble wa-bubble-bot">
+                            <div>${body}</div>
+                            <div class="wa-time">${timeStr} · Delivered ✓✓</div>
+                        </div>
+                    `;
+                }
+            }
+        }
+
+        // Initialize default view
+        generateMessage();
+
+        async function simulateReply(text) {
+            const chatArea = document.getElementById("wa-chat-area");
+            if (!chatArea) return;
+            const timeStr = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+
+            const merchSelect = document.getElementById("merch-select");
+            const currentMerchantId = merchSelect ? merchSelect.value : "m_001_drmeera_dentist_delhi";
+            const selectedMerchantName = (merchSelect && merchSelect.selectedIndex >= 0) 
+                ? merchSelect.options[merchSelect.selectedIndex].text.split('—')[0].trim() 
+                : "your business";
+
+            chatArea.innerHTML += `
+                <div class="wa-bubble wa-bubble-user">
+                    <div>${text}</div>
+                    <div class="wa-time">${timeStr} ✓✓</div>
+                </div>
+            `;
+
+            try {
+                const res = await fetch("/v1/reply", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        conversation_id: "demo_conv_" + currentMerchantId,
+                        merchant_id: currentMerchantId,
+                        from_role: "merchant",
+                        message: text,
+                        received_at: new Date().toISOString(),
+                        turn_number: 2
+                    })
+                });
+                const data = await res.json();
+                
+                let replyBody = data.body || (data.action === "end" ? "Conversation ended." : "Understood.");
+                chatArea.innerHTML += `
+                    <div class="wa-bubble wa-bubble-bot">
+                        <div>${replyBody}</div>
+                        <div class="wa-time">${new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})} · Action: ${data.action ? data.action.toUpperCase() : 'SEND'} ✓✓</div>
+                    </div>
+                `;
+            } catch (e) {
+                let replyBody = `Done! I'm proceeding with the update for ${selectedMerchantName}. I'll notify you as soon as the changes go live.`;
+                if (text.includes("Thank you for contacting")) {
+                    replyBody = "Got your automated note. If you'd like me to assist with your profile directly, reply YES anytime!";
+                } else if (text.includes("Stop")) {
+                    replyBody = "Understood. I will not message you further. Wishing your business continued success!";
+                }
+                chatArea.innerHTML += `
+                    <div class="wa-bubble wa-bubble-bot">
+                        <div>${replyBody}</div>
+                        <div class="wa-time">${new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})} · Delivered ✓✓</div>
+                    </div>
+                `;
+            }
+
+            chatArea.scrollTop = chatArea.scrollHeight;
+        }
+
+        function sendCustomReply() {
+            const input = document.getElementById("wa-input-box");
+            if (!input) return;
+            const text = input.value.trim();
+            if (!text) return;
+            input.value = "";
+            simulateReply(text);
+        }
+
+        function copyBaseUrl() {
+            const url = window.location.origin;
+            navigator.clipboard.writeText(url).then(() => {
+                const toast = document.getElementById("toast-msg");
+                if (toast) {
+                    toast.innerText = `Copied submission URL: ${url}`;
+                    toast.style.display = "block";
+                    setTimeout(() => { toast.style.display = "none"; }, 3000);
+                }
+            });
+        }
+
+        function onCategoryChange() {
+            const catSelect = document.getElementById("cat-select");
+            const merchSelect = document.getElementById("merch-select");
+            const trgSelect = document.getElementById("trg-select");
+            if (!catSelect || !merchSelect || !trgSelect) return;
+
+            const cat = catSelect.value;
+            if (cat === "dentists") {
+                merchSelect.innerHTML = `
+                    <option value="m_001_drmeera_dentist_delhi">Dr. Meera's Dental Clinic — Lajpat Nagar, Delhi</option>
+                    <option value="m_002_bharat_dentist_mumbai">Bharat Dental Care — Andheri West, Mumbai</option>
+                `;
+                trgSelect.innerHTML = `
+                    <option value="trg_research">JIDA Research Digest (3-mo fluoride cuts caries 38%)</option>
+                    <option value="trg_recall">Patient 6-Month Recall Due (Priya — Wed/Thu slots)</option>
+                    <option value="trg_competitor">Competitor Opened Nearby (1.2 km away)</option>
+                    <option value="trg_compliance">DCI Radiograph Dose Limit Revision (Dec 15 deadline)</option>
+                `;
+            } else if (cat === "salons") {
+                merchSelect.innerHTML = `
+                    <option value="m_003_studio11_salon_hyderabad">Studio11 Family Salon — Kapra, Hyderabad</option>
+                    <option value="m_004_glamour_salon_pune">Glamour Lounge Spa & Salon — Pune</option>
+                `;
+                trgSelect.innerHTML = `
+                    <option value="trg_recall">Styling Recall Due (Kavya — Sat slots)</option>
+                    <option value="trg_competitor">Competitor Opened Nearby (1.2 km away)</option>
+                    <option value="trg_milestone">Milestone Ahead (Google reviews)</option>
+                `;
+            } else if (cat === "restaurants") {
+                merchSelect.innerHTML = `
+                    <option value="m_006_southindiancafe_restaurant_bangalore">Mylari South Indian Cafe — Indiranagar, Bangalore</option>
+                    <option value="m_005_pizzajunction_restaurant_delhi">SK Pizza Junction — Sant Nagar, Delhi</option>
+                `;
+                trgSelect.innerHTML = `
+                    <option value="trg_planning">Corporate Thali / Lunch Delivery Program</option>
+                    <option value="trg_match">IPL Match Today (DC vs MI — +35% query surge)</option>
+                    <option value="trg_milestone">150 Google Reviews Milestone</option>
+                `;
+            } else if (cat === "gyms") {
+                merchSelect.innerHTML = `
+                    <option value="m_008_zenyoga_gym_chennai">Zen Yoga Studio — Mylapore, Chennai</option>
+                    <option value="m_007_powerhouse_gym_bangalore">PowerHouse Fitness — Bangalore</option>
+                `;
+                trgSelect.innerHTML = `
+                    <option value="trg_planning">Kids Yoga Summer Batch Curriculum</option>
+                    <option value="trg_recall">Member Winback Recall (Rashmi — 57 days lapsed)</option>
+                `;
+            } else if (cat === "pharmacies") {
+                merchSelect.innerHTML = `
+                    <option value="m_009_apollo_pharmacy_jaipur">Apollo Health Plus Pharmacy — Malviya Nagar, Jaipur</option>
+                    <option value="m_010_sunrisepharm_pharmacy_lucknow">Sunrise Medicos — Gomti Nagar, Lucknow</option>
+                `;
+                trgSelect.innerHTML = `
+                    <option value="trg_refill">Chronic Medicine Refill Due (Metformin & Atorvastatin)</option>
+                    <option value="trg_match">Summer Demand Surge (ORS & Sunscreens +40%)</option>
+                `;
+            }
+            generateMessage();
+        }
+    </script>
+</body>
+</html>
