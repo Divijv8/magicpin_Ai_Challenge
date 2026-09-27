@@ -31,13 +31,13 @@ if hasattr(sys.stdout, "reconfigure"):
 BOT_URL = os.environ.get("BOT_URL", "http://127.0.0.1:8080")
 
 # Choose your LLM provider: "openai", "anthropic", "gemini", "deepseek", "groq", "ollama", "openrouter"
-LLM_PROVIDER = os.environ.get("LLM_PROVIDER", "gemini" if os.environ.get("GEMINI_API_KEY") else "openai")
+LLM_PROVIDER = os.environ.get("LLM_PROVIDER", "groq" if os.environ.get("GROQ_API_KEY") else ("gemini" if os.environ.get("GEMINI_API_KEY") else "openai"))
 
 # Your API key (paste your key here)
-LLM_API_KEY = os.environ.get("GEMINI_API_KEY") or os.environ.get("OPENAI_API_KEY") or ""
+LLM_API_KEY = os.environ.get("GROQ_API_KEY") or os.environ.get("GEMINI_API_KEY") or os.environ.get("OPENAI_API_KEY") or ""
 
 # Model to use (leave empty for default, or specify like "gpt-4o", "claude-3-5-sonnet-20241022", etc.)
-LLM_MODEL = os.environ.get("LLM_MODEL", "gemini-2.5-flash" if LLM_PROVIDER == "gemini" else "")
+LLM_MODEL = os.environ.get("LLM_MODEL", "llama-3.3-70b-versatile" if LLM_PROVIDER == "groq" else ("gemini-2.5-flash" if LLM_PROVIDER == "gemini" else ""))
 
 # For Ollama only: local server URL
 OLLAMA_URL = os.environ.get("OLLAMA_URL", "http://localhost:11434")

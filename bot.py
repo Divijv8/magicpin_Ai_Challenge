@@ -23,6 +23,7 @@ from models import (
 from composer import compose as compose_message
 from conversation_handlers import conversation_manager
 from gemini_client import gemini_client
+from groq_client import groq_client
 import database
 
 # Setup logging
@@ -221,16 +222,56 @@ async def healthz():
 @app.get("/v1/metadata", response_model=MetadataResponse)
 async def metadata():
     """Bot metadata & team credentials."""
-    model_name = gemini_client.active_model if gemini_client.is_available else "deterministic-expert-synthesizer"
+    if groq_client.is_available:
+        model_desc = f"Groq ({groq_client.message_model}) + 4-Context Expert Engine"
+    elif gemini_client.is_available:
+        model_desc = f"Gemini ({gemini_client.active_model}) + 4-Context Expert Engine"
+    else:
+        model_desc = "deterministic-expert-synthesizer"
+
     return MetadataResponse(
         team_name="Vera Apex Team",
         team_members=["magicpin Challenge Team"],
-        model=f"Gemini ({model_name}) + 4-Context Expert Engine",
-        approach="4-context dynamic synthesis with factual grounding, psychological compulsion levers, and auto-reply state machine",
+        model=model_desc,
+        approach="2-layer Groq/Gemini pipeline with factual grounding, psychological compulsion levers, and auto-reply state machine",
         contact_email="challenge@magicpin.in",
-        version="1.2.0",
+        version="1.3.0",
         submitted_at="2026-04-26T08:00:00Z"
     )
+
+
+@app.get("/v1/test-groq")
+async def test_groq_endpoint():
+    """Live verification probe for Groq 2-layer API connectivity."""
+    if not groq_client.is_available:
+        return {
+            "status": "not_configured",
+            "api_key_set": False,
+            "message": "GROQ_API_KEY environment variable is not set in .env. Bot will fall back to Gemini or Expert rules."
+        }
+
+    start_t = time.time()
+    intent_res = groq_client.classify_intent("Haan bilkul, send me the pricing sheet!")
+    intent_ms = round((time.time() - start_t) * 1000, 1)
+
+    start_t2 = time.time()
+    msg_res = groq_client.compose_message(
+        system_instruction="You are Vera assistant. Respond with strict JSON: {\"body\": \"Hello!\", \"cta\": \"binary\", \"send_as\": \"vera\", \"suppression_key\": \"k\", \"rationale\": \"r\"}",
+        user_prompt="Say hello in 5 words."
+    )
+    msg_ms = round((time.time() - start_t2) * 1000, 1)
+
+    return {
+        "status": "connected" if (intent_res and msg_res) else "partial_or_failed",
+        "api_key_set": True,
+        "intent_model": groq_client.intent_model,
+        "message_model": groq_client.message_model,
+        "layer_1_intent_latency_ms": intent_ms,
+        "layer_2_message_latency_ms": msg_ms,
+        "total_latency_ms": round(intent_ms + msg_ms, 1),
+        "intent_sample": intent_res,
+        "message_sample": msg_res
+    }
 
 
 @app.get("/v1/test-gemini")

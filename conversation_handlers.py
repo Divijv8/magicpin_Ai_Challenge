@@ -3,6 +3,7 @@ import json
 import logging
 from typing import Dict, Any, List, Optional
 from gemini_client import gemini_client
+from groq_client import groq_client
 
 logger = logging.getLogger(__name__)
 
@@ -233,15 +234,26 @@ class ConversationManager:
             }
 
         # 5. GENERAL ENGAGEMENT / QUESTION HANDLING
+        system_prompt = (
+            "You are Vera, magicpin's merchant assistant. The merchant just replied to your message.\n"
+            "Provide a concise, helpful, action-oriented reply (under 40 words).\n"
+            "If they asked a question, answer directly. End with a simple next step.\n"
+            "Respond with strict JSON: {\"action\": \"send\" | \"wait\" | \"end\", \"body\": \"...\", \"cta\": \"...\", \"rationale\": \"...\"}"
+        )
+        user_prompt = f"Merchant message: \"{message}\"\nTurn: {turn_number}\nConversation history: {json.dumps(history[-4:])}"
+
+        # Try Groq first
+        if groq_client.is_available:
+            try:
+                parsed = groq_client.compose_message(system_instruction=system_prompt, user_prompt=user_prompt, temperature=0.0)
+                if parsed and parsed.get("action") in ("send", "wait", "end") and parsed.get("body"):
+                    return parsed
+            except Exception as e:
+                logger.warning(f"Groq conversational reply error: {e}")
+
+        # Fallback to Gemini
         if gemini_client.is_available:
             try:
-                system_prompt = (
-                    "You are Vera, magicpin's merchant assistant. The merchant just replied to your message.\n"
-                    "Provide a concise, helpful, action-oriented reply (under 40 words).\n"
-                    "If they asked a question, answer directly. End with a simple next step.\n"
-                    "Respond with strict JSON: {\"action\": \"send\" | \"wait\" | \"end\", \"body\": \"...\", \"cta\": \"...\", \"rationale\": \"...\"}"
-                )
-                user_prompt = f"Merchant message: \"{message}\"\nTurn: {turn_number}\nConversation history: {json.dumps(history[-4:])}"
                 resp = gemini_client.complete(user_prompt, system_instruction=system_prompt, temperature=0.0)
                 if resp:
                     match = re.search(r'\{[\s\S]*\}', resp)
@@ -250,7 +262,7 @@ class ConversationManager:
                         if parsed.get("action") in ("send", "wait", "end") and parsed.get("body"):
                             return parsed
             except Exception as e:
-                logger.warning(f"LLM reply handler error: {e}")
+                logger.warning(f"Gemini reply handler error: {e}")
 
         # Default smart response
         return {

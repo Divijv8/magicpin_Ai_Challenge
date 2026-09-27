@@ -9,6 +9,7 @@ import re
 import logging
 from typing import Dict, Any, Optional, Tuple, List
 from gemini_client import gemini_client
+from groq_client import groq_client
 
 logger = logging.getLogger(__name__)
 
@@ -788,7 +789,17 @@ def compose(category: dict, merchant: dict, trigger: dict, customer: dict | None
     """
     facts = extract_context_facts(category, merchant, trigger, customer)
 
-    # Attempt LLM generation if Gemini is available
+    # 1. Attempt LLM generation with Groq if available (Ultra-fast formulation)
+    if groq_client.is_available:
+        try:
+            system_instruction, user_prompt = build_gemini_prompt(category, merchant, trigger, customer, facts)
+            parsed = groq_client.compose_message(system_instruction=system_instruction, user_prompt=user_prompt, temperature=0.0)
+            if parsed and parsed.get("body") and len(parsed.get("body", "").strip()) > 10:
+                return sanitize_and_validate_output(parsed, category, merchant, trigger, customer, facts)
+        except Exception as e:
+            logger.warning(f"Groq LLM composition failed: {e}. Trying secondary providers.")
+
+    # 2. Attempt LLM generation if Gemini is available
     if gemini_client.is_available:
         try:
             system_instruction, user_prompt = build_gemini_prompt(category, merchant, trigger, customer, facts)
@@ -801,8 +812,8 @@ def compose(category: dict, merchant: dict, trigger: dict, customer: dict | None
                     if parsed.get("body") and len(parsed.get("body", "").strip()) > 10:
                         return sanitize_and_validate_output(parsed, category, merchant, trigger, customer, facts)
         except Exception as e:
-            logger.warning(f"LLM composition failed: {e}. Falling back to expert rule composer.")
+            logger.warning(f"Gemini LLM composition failed: {e}. Falling back to expert rule composer.")
 
-    # High-quality deterministic fallback engine
+    # 3. High-quality deterministic fallback engine
     expert_result = compose_with_expert_rules(category, merchant, trigger, customer, facts)
     return sanitize_and_validate_output(expert_result, category, merchant, trigger, customer, facts)
